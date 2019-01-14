@@ -4,3 +4,5 @@ terraform\.tfstate\.backup
 terraform\.tfstate
 
 terraform\.exe
+
+\.terraform\.tfstate\.lock\.info

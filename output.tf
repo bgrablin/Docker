@@ -1,3 +1,3 @@
-output "ip" {
-  value = "${aws_eip.eip_one.public_ip}"
+output "master.ip" {
+  value = "${aws_instance.master.public_ip}"
 }
