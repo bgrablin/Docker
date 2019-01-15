@@ -66,8 +66,8 @@ resource "aws_instance" "master" {
             "sudo chmod +x /usr/local/bin/docker-compose",
             "sudo groupadd docker",
             "sudo usermod -aG docker $USER",
-            "sudo docker swarm init",
-            "sudo docker swarm join-token --quiet worker > /home/ec2-user/token",
+            # "sudo docker swarm init",
+            # "sudo docker swarm join-token --quiet worker > /home/ec2-user/token",
             "git clone https://github.com/bgrablin/Docker.git /home/ec2-user/Docker",
             "ansible-playbook -i /home/ec2-user/Docker/Ansible/hosts /home/ec2-user/Docker/Ansible/main.yml",
         ]
