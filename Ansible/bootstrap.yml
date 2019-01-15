@@ -1,0 +1,71 @@
+# Has not been tested 12/21/2018
+# - Changed the root user’s password
+# - Created the remote user
+# - Set remote user’s password
+# - Uploaded your workstation’s SSH public key to the remote user
+# - Added the remote user to the sudoers file
+# - Disallowed root SSH access
+# - Disallowed SSH password authentication
+# - Disallowed SSH GSS API authentication
+# - Run with ansible-playbook -i hosts bootstrap.yml --user remote --sudo
+---
+- hosts: all
+  vars:
+    - root_password: 'raspberry' # Need to hash password
+    - remote_password: 'raspberry' # Need to hash password
+ 
+  tasks:
+  - name: Change root password
+    user:
+      name=root
+      password={{ root_password }}
+ 
+  - name: Add user remote
+    user:
+      name=remote
+      password={{ remote_password }}
+ 
+  - name: Add SSH public key to user remote
+    authorized_key:
+      user=remote
+      key="{{ lookup('file', "../files/workstation.pub") }}"
+ 
+  - name: Add remote user to sudoers
+    lineinfile:
+      "dest=/etc/sudoers
+      regexp='^remote ALL'
+      line='remote ALL=(ALL) NOPASSWD: ALL'
+      state=present"
+ 
+  - name: Disallow root SSH access
+    lineinfile:
+      dest=/etc/ssh/sshd_config
+      regexp="^PermitRootLogin"
+      line="PermitRootLogin no"
+      state=present
+    notify:
+      - restart sshd
+ 
+  - name: Disallow SSH password authentication
+    lineinfile:
+      dest=/etc/ssh/sshd_config
+      regexp="^PasswordAuthentication"
+      line="PasswordAuthentication no"
+      state=present
+    notify:
+      - restart sshd
+ 
+  - name: Disallow SSH GSS API authentication
+    lineinfile:
+      dest=/etc/ssh/sshd_config
+      regexp="^GSSAPIAuthentication"
+      line="GSSAPIAuthentication no"
+      state=present
+    notify:
+      - restart sshd
+
+  handlers:
+  - name: restart sshd
+    service: 
+      name=sshd
+      state=restarted

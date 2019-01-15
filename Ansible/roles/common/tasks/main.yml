@@ -1,0 +1,85 @@
+---
+  - name: Check Rasp model
+    command: cat /proc/device-tree/model
+    register: piversion
+    
+  - name: Debug each entry of my hosts
+    debug:
+      msg: "System {{ inventory_hostname }} is a {{ piversion.stdout }}"
+
+  - name: Ensure hostname set
+    hostname:
+      name: "{{ inventory_hostname }}"
+    when: not inventory_hostname is match('(\d{1,3}\.){3}\d{1,3}')
+    register: hostname
+    tags: hostname
+
+  - name: Ensure hostname is in /etc/hosts
+    lineinfile:
+      dest: /etc/hosts
+      regexp: "^{{ ansible_default_ipv4.address }}.+$"
+      line: "{{ ansible_default_ipv4.address }} {{ ansible_fqdn }} {{ ansible_hostname }}"
+    register: hostname
+    tags: hostname
+
+  - name: set timezone to UTC
+    timezone:
+      name: UTC
+    register: timezone
+
+  # Modified due to depreciated syntax
+  - name: install common packages
+    apt:
+      pkg: 
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        - locales
+        - build-essential
+        - acl
+        - ntp
+        - htop
+        - git
+        - supervisor
+        - python-pip
+        - python3-pip
+        - nginx
+        - rpi-update
+      state: present
+    notify: reload systemd
+
+  # - name: Run kernel upgrade (this can take up to 10 minutes)
+  #   command: /usr/bin/rpi-update
+  #   register: rpiupdate
+  #   tags:
+  #     - system-upgrade
+
+  - name: Update APT package cache
+    action: apt update_cache=yes
+
+  - name: Upgrade APT to the lastest packages
+    apt:
+      upgrade: full
+
+  - name: Expand filesystem to fill disk
+    command: raspi-config --expand-rootfs
+
+  # - name: Restart the system
+  #   become: true
+  #   shell: sleep 2 && shutdown -r now "Ansbile requested system reboot"
+  #   async: 1
+  #   poll: 0
+  #   ignore_errors: true
+
+  # - name: Wait for system to boot
+  #   become: false
+  #   vars:
+  #     ansible_connection: local
+  #   local_action: wait_for
+  #   args:
+  #     host: "{{ inventory_hostname }}"
+  #     port: 22
+  #     state: started
+  #     delay: 15
+  #     timeout: 300
