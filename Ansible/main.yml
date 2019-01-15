@@ -5,7 +5,7 @@
   become: yes
   roles:
   - { role: RedHat_common, when: ansible_os_family == 'RedHat' }
-  # - docker
+  - docker
 
 # - name: Configure Manager
 #   hosts: swarm_manager

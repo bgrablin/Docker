@@ -1,64 +1,55 @@
 ---
-  - name:    Install prerequisites
-    apt:     
-      pkg:
-        - apt-transport-https
-        - ca-certificates
-        - curl
-        - software-properties-common
-      state:  present
-
   - name: Determine if docker is installed
     stat:
       path: /usr/bin/docker
     register: docker_there
     ignore_errors: True
 
-  - name:    Add Docker GPG key
-    apt_key: 
-      url: https://download.docker.com/linux/ubuntu/gpg
-    when: docker_there.stat.exists == False
+  # - name:    Add Docker GPG key
+  #   apt_key: 
+  #     url: https://download.docker.com/linux/ubuntu/gpg
+  #   when: docker_there.stat.exists == False
 
-  - name: Clean Docker files to be idempotent
-    file:
-      name: "{{ item }}"
-      state: absent
-    with_items:
-      - /etc/apt/sources.list.d/docker.list
-    when: docker_there.stat.exists == False
+  # - name: Clean Docker files to be idempotent
+  #   file:
+  #     name: "{{ item }}"
+  #     state: absent
+  #   with_items:
+  #     - /etc/apt/sources.list.d/docker.list
+  #   when: docker_there.stat.exists == False
 
-  - name: Recreate Docker files
-    file:
-      name: "{{ item }}"
-      state: touch
-    with_items:
-      - /etc/apt/sources.list.d/docker.list
-    when: docker_there.stat.exists == False
-
-
-  - name: Add Docker to the list of repositories
-    lineinfile:
-      dest: /etc/apt/sources.list.d/{{ item.category }}.list
-      line: "{{ item.url }}"
-    with_items:
-      - { url: 'deb [arch=armhf] https://download.docker.com/linux/raspbian stretch stable', category: 'docker'     }
-    when: docker_there.stat.exists == False
+  # - name: Recreate Docker files
+  #   file:
+  #     name: "{{ item }}"
+  #     state: touch
+  #   with_items:
+  #     - /etc/apt/sources.list.d/docker.list
+  #   when: docker_there.stat.exists == False
 
 
-  - name: Update list of available repositories
-    apt: 
-      update_cache: yes
-    when: docker_there.stat.exists == False
+  # - name: Add Docker to the list of repositories
+  #   lineinfile:
+  #     dest: /etc/apt/sources.list.d/{{ item.category }}.list
+  #     line: "{{ item.url }}"
+  #   with_items:
+  #     - { url: 'deb [arch=armhf] https://download.docker.com/linux/raspbian stretch stable', category: 'docker'     }
+  #   when: docker_there.stat.exists == False
 
-  - name: Update all packages to the latest version
-    apt:
-      upgrade: dist
-    when: docker_there.stat.exists == False
 
-  - name:    Install Docker
-    apt:     
-      name: docker-ce
-    when: docker_there.stat.exists == False
+  # - name: Update list of available repositories
+  #   apt: 
+  #     update_cache: yes
+  #   when: docker_there.stat.exists == False
+
+  # - name: Update all packages to the latest version
+  #   apt:
+  #     upgrade: dist
+  #   when: docker_there.stat.exists == False
+
+  # - name:    Install Docker
+  #   apt:     
+  #     name: docker-ce
+  #   when: docker_there.stat.exists == False
 
   - name: Ensure Docker is started.
     service:
@@ -78,7 +69,7 @@
           --listen-addr {{ docker_swarm_addr }}:{{ docker_swarm_port }}
           --advertise-addr {{ docker_swarm_addr }}
     when: "docker_info.stdout.find('Swarm: active') == -1
-      and inventory_hostname == groups['pis_manager'][0]"
+      and inventory_hostname == groups['swarm_manager'][0]"
     tags:
       - skip_ansible_lint # Suppressing the linter
 
@@ -86,9 +77,9 @@
     shell: docker swarm join-token -q worker
     changed_when: False
     register: docker_worker_token
-    delegate_to: "{{ groups['pis_manager'][0] }}"
+    delegate_to: "{{ groups['swarm_manager'][0] }}"
     delegate_facts: True
-    when: "'pis_workers' in group_names"
+    when: "'swarm_workers' in group_names"
     tags:
       - skip_ansible_lint # Suppressing the linter
 
@@ -96,22 +87,22 @@
     shell: docker swarm join-token -q manager
     changed_when: False
     register: docker_manager_token
-    delegate_to: "{{ groups['pis_manager'][0] }}"
+    delegate_to: "{{ groups['swarm_manager'][0] }}"
     delegate_facts: True
-    when: "'pis_manager' in group_names
-      and inventory_hostname != groups['pis_manager'][0]"
+    when: "'swarm_manager' in group_names
+      and inventory_hostname != groups['swarm_manager'][0]"
     tags:
       - skip_ansible_lint # Suppressing the linter
 
   - name: Declare the address of the first Swarm manager as a fact.
     set_fact:
       docker_manager_address: "{{ docker_swarm_addr }}:{{ docker_swarm_port }}"
-    when: "inventory_hostname == groups['pis_manager'][0]"
+    when: "inventory_hostname == groups['swarm_manager'][0]"
 
   - name: Distribute the fact containing address of the first Swarm manager.
     set_fact:
-      docker_manager_address: "{{hostvars[groups['pis_manager'][0]]['docker_manager_address'] }}"
-    when: "inventory_hostname != groups['pis_manager'][0]"
+      docker_manager_address: "{{hostvars[groups['swarm_manager'][0]]['docker_manager_address'] }}"
+    when: "inventory_hostname != groups['swarm_manager'][0]"
 
   - name: Join the pending Swarm worker nodes.
     shell: docker swarm join
@@ -122,6 +113,6 @@
     changed_when: False
     when: "docker_info.stdout.find('Swarm: active') == -1
       and docker_info.stdout.find('Swarm: pending') == -1
-      and 'pis_workers' in group_names"
+      and 'swarm_workers' in group_names"
     tags:
       - skip_ansible_lint # Suppressing the linter

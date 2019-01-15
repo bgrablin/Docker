@@ -27,9 +27,9 @@
       name: UTC
     register: timezone
 
-  - name: Install AWS CLI package via Pip
-    pip: name=awscli
-    sudo: yes
+  # - name: Install AWS CLI package via Pip
+  #   pip: name=awscli
+  #   sudo: yes
   # # Modified due to depreciated syntax
   # - name: install common packages
   #   apt:
