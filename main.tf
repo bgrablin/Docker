@@ -34,6 +34,7 @@ resource "aws_instance" "master" {
     ]
   key_name = "docker-pair"
   associate_public_ip_address = "true"
+  private_ips = ["172.31.19.176"]
   connection {
   type        = "ssh"
   user        = "ec2-user"
@@ -67,7 +68,8 @@ resource "aws_instance" "master" {
             "sudo usermod -aG docker $USER",
             "sudo docker swarm init",
             "sudo docker swarm join-token --quiet worker > /home/ec2-user/token",
-            "git clone https://github.com/bgrablin/Docker.git"
+            "git clone https://github.com/bgrablin/Docker.git /home/ec2-user/Docker",
+            "ansible-playbook -i /home/ec2-user/Docker/Ansible/hosts /home/ec2-user/Docker/Ansible/main.yml",
         ]
     }
   tags {
@@ -88,6 +90,7 @@ resource "aws_instance" "slave" {
     "${aws_security_group.sg_docker.name}"
     ]
   key_name = "docker-pair"
+  private_ip = "${lookup(ips,count.index)}"
   connection {
   type        = "ssh"
   user        = "ec2-user"

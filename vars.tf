@@ -17,3 +17,9 @@ variable "ssh_key_private" {
   default     = "~/.ssh/id_rsa"
   description = "Path to the SSH private key for accessing cloud instances."
 }
+variable "ips" {
+    default = {
+        "0" = "172.31.31.195",
+        "1" = "172.31.31.196",
+    }
+}
