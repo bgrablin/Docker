@@ -34,7 +34,7 @@ resource "aws_instance" "master" {
     ]
   key_name = "docker-pair"
   associate_public_ip_address = "true"
-  private_ips = ["172.31.19.176"]
+  private_ip = "172.31.19.176"
   connection {
   type        = "ssh"
   user        = "ec2-user"
@@ -90,7 +90,7 @@ resource "aws_instance" "slave" {
     "${aws_security_group.sg_docker.name}"
     ]
   key_name = "docker-pair"
-  private_ip = "${lookup(ips,count.index)}"
+  private_ip = "${lookup(var.ips,count.index)}"
   connection {
   type        = "ssh"
   user        = "ec2-user"
@@ -105,7 +105,7 @@ resource "aws_instance" "slave" {
       inline = [
             "sudo yum-config-manager --enable rhui-REGION-rhel-server-extras",
             "sudo yum-config-manager --enable extras",
-            "sudo yum update -y",
+            # "sudo yum update -y",
             "sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo",
             "sudo rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm",
             "sudo yum makecache fast",
