@@ -3,6 +3,16 @@
   hosts: all
   remote_user: ec2-user
   become: yes
+  when: ansible_facts['os_family'] == "RedHat"
   roles:
-  - common
+  - RedHat_common
+  # - docker
+
+- name: Configure Manager
+  hosts: swarm_manager
+  remote_user: ec2-user
+  become: yes
+  when: ansible_facts['os_family'] == "RedHat"
+  roles:
+  - RedHat_common
   # - docker
