@@ -3,11 +3,11 @@ swarm_manager
 swarm_workers
 
 [swarm_manager]
-172.31.19.176
+swarm-manager-1 ansible_host=172.31.19.176
 
 [swarm_workers]
-172.31.31.195
-172.31.21.214
+swarm-worker-1 ansible_host=172.31.31.195
+swarm-worker-2 ansible_host=172.31.21.214
 
 [swarm:vars]
 ansible_ssh_common_args='-o StrictHostKeyChecking=no'

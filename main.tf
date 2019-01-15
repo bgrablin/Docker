@@ -67,6 +67,7 @@ resource "aws_instance" "master" {
             "sudo usermod -aG docker $USER",
             "sudo docker swarm init",
             "sudo docker swarm join-token --quiet worker > /home/ec2-user/token",
+            "git clone https://github.com/bgrablin/Docker.git"
         ]
     }
   tags {
