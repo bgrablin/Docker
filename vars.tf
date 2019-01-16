@@ -17,6 +17,10 @@ variable "ssh_key_private" {
   default     = "~/.ssh/id_rsa"
   description = "Path to the SSH private key for accessing cloud instances."
 }
+variable "vpc_cidr" {
+    description = "CIDR for the whole VPC"
+    default = "172.31.0.0/16"
+}
 variable "ips" {
     default = {
         "0" = "172.31.31.195",

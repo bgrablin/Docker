@@ -1,6 +1,21 @@
 provider "aws" {
   region     = "${var.region}"
 }
+resource "aws_vpc" "default" {
+    cidr_block = "${var.vpc_cidr}"
+    enable_dns_hostnames = true
+    tags {
+        Name = "terraform-aws-vpc"
+    }
+}
+resource "aws_subnet" "main" {
+  vpc_id  = "${aws_vpc.default.id}"
+  cidr_block  = "172.31.16.0/20"
+
+  tags = {
+    Name  = "Main"
+  }
+}
 resource "aws_key_pair" "docker-pair" {
   key_name = "docker-pair"
   public_key = "${file("~/.ssh/id_rsa.pub")}"
@@ -33,6 +48,7 @@ resource "aws_instance" "master" {
     "${aws_security_group.sg_docker.name}"
     ]
   key_name = "docker-pair"
+  subnet_id = "${aws_subnet.main.id}"
   associate_public_ip_address = "true"
   private_ip = "172.31.19.176"
   connection {
@@ -90,6 +106,7 @@ resource "aws_instance" "slave" {
     "${aws_security_group.sg_docker.name}"
     ]
   key_name = "docker-pair"
+  subnet_id = "${aws_subnet.main.id}"
   private_ip = "${lookup(var.ips,count.index)}"
   connection {
   type        = "ssh"
